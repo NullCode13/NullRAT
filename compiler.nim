@@ -161,6 +161,12 @@ proc compiler(): int =
                     echo "Found!", path
                     pyinst = path
                     break
+            var roamingappdata = getEnv("appdata")
+            for path in walkDirRec(roamingappdata):
+                if "pyinstaller" in path:
+                    echo "Found!", path
+                    pyinst = path
+                    break
             if "undef" in pyinst:
                 echo "[FATAL] Pyinstaller executable not found."
                 echo "Please check your environment variables and python installation"
@@ -194,7 +200,13 @@ proc compiler(): int =
             for path in walkDirRec(localappdata):
                 if "armor" in path:
                     echo "Found!", path
-                    pyinst = path
+                    armor = path
+                    break
+            var roamingappdata = getEnv("appdata")
+            for path in walkDirRec(roamingappdata):
+                if "armor" in path:
+                    echo "Found!", path
+                    armor = path
                     break
             if "undef" in pyinst:
                 echo "[FATAL] Pyarmor executable not found."
