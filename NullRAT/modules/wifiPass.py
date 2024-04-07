@@ -28,11 +28,10 @@ class WifiPass(commands.Cog):
                 key = key[0].strip().strip(":").strip()
             except IndexError:
                 key = "None"
-            
+
             await ctx.response.send_message(
-                embed = self.bot.genEmbed(
-                    "Wifi password for " + ssid + ":",
-                    datetime.now(), key
+                embed=self.bot.genEmbed(
+                    f"Wifi password for {ssid}:", datetime.now(), key
                 )
             )
 
